@@ -1,9 +1,13 @@
 import { Calendar, Users, UserCheck, Clock, TrendingUp, Activity } from "lucide-react"
 import { DashboardCard } from "@/components/DashboardCard"
+import { OnboardingBanner } from "@/components/OnboardingBanner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useClinic } from "@/hooks/useClinic"
 
 const Dashboard = () => {
+  const { clinic } = useClinic();
+  
   // Dados mockados - em produção viriam do Supabase
   const stats = [
     {
@@ -82,10 +86,15 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 space-y-6 bg-gradient-subtle min-h-screen">
+      {/* Onboarding Banner */}
+      {!clinic && <OnboardingBanner />}
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {clinic ? `${clinic.name} - Dashboard` : 'Dashboard'}
+          </h1>
           <p className="text-muted-foreground">
             Visão geral da sua clínica • {new Date().toLocaleDateString('pt-BR', { 
               weekday: 'long', 
@@ -95,10 +104,12 @@ const Dashboard = () => {
             })}
           </p>
         </div>
-        <Button variant="medical" className="animate-pulse-glow">
-          <Calendar className="w-4 h-4 mr-2" />
-          Novo Agendamento
-        </Button>
+        {clinic && (
+          <Button variant="medical" className="animate-pulse-glow">
+            <Calendar className="w-4 h-4 mr-2" />
+            Novo Agendamento
+          </Button>
+        )}
       </div>
 
       {/* Stats Cards */}

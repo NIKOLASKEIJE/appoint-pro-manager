@@ -1,5 +1,6 @@
-import { Calendar, Users, UserCheck, Settings, BarChart3, Home } from "lucide-react"
+import { Calendar, Users, UserCheck, Settings, BarChart3, Home, LogOut } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
+import { useAuth } from "./AuthProvider"
 
 import {
   Sidebar,
@@ -24,6 +25,7 @@ const navigationItems = [
 
 export function AppSidebar() {
   const { state } = useSidebar()
+  const { signOut, user } = useAuth()
   const location = useLocation()
   const currentPath = location.pathname
 
@@ -87,19 +89,43 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* User Info at bottom */}
-        {!isCollapsed && (
-          <div className="mt-auto p-4 border-t border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">AD</span>
+        <div className="mt-auto">
+          {!isCollapsed && (
+            <div className="p-4 border-t border-border/50">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">
+                    {user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user?.email?.split('@')[0] || 'Usuário'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">Admin</p>
-                <p className="text-xs text-muted-foreground truncate">admin@clinica.com</p>
-              </div>
+              <button
+                onClick={signOut}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </button>
             </div>
-          </div>
-        )}
+          )}
+          {isCollapsed && (
+            <div className="p-2">
+              <button
+                onClick={signOut}
+                className="w-full flex items-center justify-center p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-colors"
+                title="Sair"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </SidebarContent>
     </Sidebar>
   )
