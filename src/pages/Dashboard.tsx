@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useClinic } from "@/hooks/useClinic"
 
 const Dashboard = () => {
-  const { clinic } = useClinic();
+  const { currentClinic } = useClinic();
   
   // Dados mockados - em produção viriam do Supabase
   const stats = [
@@ -87,13 +87,13 @@ const Dashboard = () => {
   return (
     <div className="p-6 space-y-6 bg-gradient-subtle min-h-screen">
       {/* Onboarding Banner */}
-      {!clinic && <OnboardingBanner />}
+      {!currentClinic && <OnboardingBanner />}
       
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            {clinic ? `${clinic.name} - Dashboard` : 'Dashboard'}
+            {currentClinic ? `${currentClinic.name} - Dashboard` : 'Dashboard'}
           </h1>
           <p className="text-muted-foreground">
             Visão geral da sua clínica • {new Date().toLocaleDateString('pt-BR', { 
@@ -104,7 +104,7 @@ const Dashboard = () => {
             })}
           </p>
         </div>
-        {clinic && (
+        {currentClinic && (
           <Button variant="medical" className="animate-pulse-glow">
             <Calendar className="w-4 h-4 mr-2" />
             Novo Agendamento
