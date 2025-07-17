@@ -13,7 +13,7 @@ const Agenda = () => {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>("")
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>("all")
   
   const { appointments, loading } = useAppointments()
   const { professionals } = useProfessionals()
@@ -68,7 +68,7 @@ const Agenda = () => {
                   <SelectValue placeholder="Todos os profissionais" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os profissionais</SelectItem>
+                  <SelectItem value="all">Todos os profissionais</SelectItem>
                   {professionals.map((professional) => (
                     <SelectItem key={professional.id} value={professional.id}>
                       <div className="flex items-center gap-2">

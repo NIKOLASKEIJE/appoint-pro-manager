@@ -29,7 +29,7 @@ export function WeeklyCalendar({
   const filteredAppointments = useMemo(() => {
     let filtered = appointments;
     
-    if (selectedProfessionalId) {
+    if (selectedProfessionalId && selectedProfessionalId !== "all") {
       filtered = filtered.filter(apt => apt.professional_id === selectedProfessionalId);
     }
     
