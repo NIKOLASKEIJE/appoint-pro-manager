@@ -38,7 +38,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className="bg-gradient-card border-r border-border/50 shadow-card"
+      className="bg-gradient-card border-r border-border/50 shadow-card pt-14"
       collapsible="icon"
     >
       {/* Logo/Brand */}
