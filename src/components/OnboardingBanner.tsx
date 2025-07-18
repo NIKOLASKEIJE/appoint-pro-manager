@@ -16,25 +16,30 @@ export function OnboardingBanner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    const clinic = await createClinic(clinicName, clinicAddress);
+    if (!clinicName.trim()) return;
     
-    if (clinic) {
-      toast({
-        title: "Sucesso!",
-        description: "Clínica criada com sucesso.",
-      });
-      setShowForm(false);
-    } else {
+    try {
+      setLoading(true);
+      const clinic = await createClinic(clinicName, clinicAddress);
+      
+      if (clinic) {
+        toast({
+          title: "Sucesso!",
+          description: "Clínica criada com sucesso.",
+        });
+        setShowForm(false);
+        setClinicName('');
+        setClinicAddress('');
+      }
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Erro ao criar clínica. Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (showForm) {

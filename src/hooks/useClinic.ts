@@ -125,8 +125,15 @@ export function useClinic() {
   const hasNoClinics = clinics.length === 0 && !loading;
 
   useEffect(() => {
-    fetchUserClinics();
-  }, [user]);
+    if (user) {
+      fetchUserClinics();
+    } else {
+      setLoading(false);
+      setClinics([]);
+      setCurrentClinic(null);
+      setUserClinics([]);
+    }
+  }, [user?.id]);
 
   return {
     clinics,

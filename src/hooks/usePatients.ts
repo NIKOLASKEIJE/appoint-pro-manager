@@ -91,8 +91,13 @@ export function usePatients() {
   };
 
   useEffect(() => {
-    fetchPatients();
-  }, [user, currentClinic]);
+    if (user && currentClinic) {
+      fetchPatients();
+    } else {
+      setLoading(false);
+      setPatients([]);
+    }
+  }, [user?.id, currentClinic?.id]);
 
   return {
     patients,

@@ -86,8 +86,13 @@ export function useProfessionals() {
   };
 
   useEffect(() => {
-    fetchProfessionals();
-  }, [user, currentClinic]);
+    if (user && currentClinic) {
+      fetchProfessionals();
+    } else {
+      setLoading(false);
+      setProfessionals([]);
+    }
+  }, [user?.id, currentClinic?.id]);
 
   return {
     professionals,

@@ -46,7 +46,10 @@ export function useAppointments() {
   const { currentClinic } = useClinic();
 
   const fetchAppointments = async () => {
-    if (!user || !currentClinic) return;
+    if (!user || !currentClinic) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -179,8 +182,13 @@ export function useAppointments() {
   };
 
   useEffect(() => {
-    fetchAppointments();
-  }, [user, currentClinic]);
+    if (user && currentClinic) {
+      fetchAppointments();
+    } else {
+      setLoading(false);
+      setAppointments([]);
+    }
+  }, [user?.id, currentClinic?.id]);
 
   return {
     appointments,
