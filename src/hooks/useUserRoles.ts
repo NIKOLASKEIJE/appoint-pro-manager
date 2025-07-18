@@ -64,51 +64,38 @@ export function useUserRoles() {
     if (!user || !currentClinic) return;
 
     try {
-      // For now, we'll ask the admin to provide the user_id directly
-      // In a real implementation, you would need admin permissions to list users
-      toast({
-        title: "Aviso",
-        description: "Para adicionar usuários, eles devem primeiro se registrar no sistema e fornecer seu ID de usuário.",
-        variant: "destructive",
-      });
-      return;
-
-      /* 
-      // This would work with admin permissions:
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-      if (userError) throw userError;
-
-      const targetUser = userData.users.find(u => u.email === roleData.user_email);
-      if (!targetUser) {
-        toast({
-          title: "Erro",
-          description: "Usuário não encontrado com este email.",
-          variant: "destructive",
+      // For now, we'll use a simple approach where users can become admin
+      // if no admin exists yet
+      if (roleData.user_email === 'current-user') {
+        const { data, error } = await supabase.rpc('assign_self_as_admin', {
+          p_clinic_id: currentClinic.id
         });
+
+        if (error) throw error;
+
+        if (data) {
+          // Refresh user roles
+          await fetchUserRoles();
+          toast({
+            title: "Sucesso",
+            description: "Você agora é administrador da clínica!",
+          });
+        } else {
+          toast({
+            title: "Aviso",
+            description: "Esta clínica já possui um administrador.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
-      const { data, error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: targetUser.id,
-          clinic_id: currentClinic.id,
-          role: roleData.role,
-          professional_id: roleData.professional_id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setUserRoles(prev => [...prev, data]);
       toast({
-        title: "Sucesso",
-        description: "Papel do usuário criado com sucesso!",
+        title: "Aviso",
+        description: "Para adicionar outros usuários, eles devem primeiro se registrar no sistema.",
+        variant: "destructive",
       });
-
-      return data;
-      */
+      return;
     } catch (error) {
       console.error('Erro ao criar papel do usuário:', error);
       toast({

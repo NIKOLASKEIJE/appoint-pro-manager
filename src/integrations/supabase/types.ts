@@ -269,6 +269,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_self_as_admin: {
+        Args: { p_clinic_id: string }
+        Returns: boolean
+      }
       get_user_professional_id: {
         Args: { p_user_id: string; p_clinic_id: string }
         Returns: string
