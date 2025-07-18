@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { Settings, Users, Shield, Trash2, Edit, Plus, UserCheck, Mail, Building2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings, Users, Shield, Trash2, Edit, Plus, UserCheck, Mail, Building2, Key, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { UserRoleModal } from "@/components/UserRoleModal";
+import { ApiTokenModal } from "@/components/ApiTokenModal";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +24,86 @@ const Configuracoes = () => {
   const [showUserRoleModal, setShowUserRoleModal] = useState(false);
   const [editingUserRole, setEditingUserRole] = useState(undefined);
   const [deletingUserRole, setDeletingUserRole] = useState(undefined);
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [apiTokens, setApiTokens] = useState<any[]>([]);
+  const [loadingTokens, setLoadingTokens] = useState(false);
+  const { toast } = useToast();
+
+  // Load API tokens
+  const loadApiTokens = async () => {
+    setLoadingTokens(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await supabase.functions.invoke('api-tokens-management', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      setApiTokens(response.data || []);
+    } catch (error) {
+      console.error('Error loading tokens:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar tokens de API",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingTokens(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApiTokens();
+  }, []);
+
+  const handleDeleteToken = async (tokenId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await supabase.functions.invoke(`api-tokens-management/${tokenId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast({
+        title: "Token removido",
+        description: "Token de API removido com sucesso",
+      });
+      
+      loadApiTokens();
+    } catch (error) {
+      console.error('Error deleting token:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover token",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const handleEditUserRole = (userRole: any) => {
     setEditingUserRole(userRole);
@@ -186,6 +269,76 @@ const Configuracoes = () => {
         </CardContent>
       </Card>
 
+      {/* API Token Management */}
+      {isClinicAdmin() && (
+        <Card className="bg-gradient-card shadow-card border-border/50">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="h-5 w-5 text-primary" />
+                  Tokens de API
+                </CardTitle>
+                <CardDescription>
+                  Gerencie tokens para integração com sistemas externos como n8n
+                </CardDescription>
+              </div>
+              <Button 
+                onClick={() => setIsTokenModalOpen(true)}
+                variant="medical"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Novo Token
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingTokens ? (
+              <p className="text-muted-foreground">Carregando tokens...</p>
+            ) : apiTokens.length === 0 ? (
+              <p className="text-muted-foreground">Nenhum token criado ainda.</p>
+            ) : (
+              <div className="space-y-4">
+                {apiTokens.map((token) => (
+                  <div key={token.id} className="flex items-center justify-between p-4 border rounded-lg bg-background">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium">{token.name}</h4>
+                        <Badge variant={token.is_active ? "default" : "secondary"}>
+                          {token.is_active ? "Ativo" : "Inativo"}
+                        </Badge>
+                        {token.expires_at && new Date(token.expires_at) < new Date() && (
+                          <Badge variant="destructive">Expirado</Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <p>Token: <code className="bg-muted px-1 rounded text-xs">{token.token_preview}</code></p>
+                        <p>Criado: {formatDate(token.created_at)}</p>
+                        {token.last_used_at && (
+                          <p>Último uso: {formatDate(token.last_used_at)}</p>
+                        )}
+                        {token.expires_at && (
+                          <p>Expira: {formatDate(token.expires_at)}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteToken(token.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Permissions Info */}
       <Card className="bg-gradient-card shadow-card border-border/50">
         <CardHeader>
@@ -204,7 +357,7 @@ const Configuracoes = () => {
                 Administrador da Clínica
               </h4>
               <p className="text-blue-700 dark:text-blue-300 text-sm">
-                Acesso completo: pode gerenciar usuários, profissionais, pacientes e todos os agendamentos.
+                Acesso completo: pode gerenciar usuários, profissionais, pacientes, tokens de API e todos os agendamentos.
               </p>
             </div>
             
@@ -236,6 +389,12 @@ const Configuracoes = () => {
           if (!open) setEditingUserRole(undefined);
         }}
         userRole={editingUserRole}
+      />
+
+      <ApiTokenModal
+        isOpen={isTokenModalOpen}
+        onClose={() => setIsTokenModalOpen(false)}
+        onTokenCreated={loadApiTokens}
       />
 
       <AlertDialog open={!!deletingUserRole} onOpenChange={() => setDeletingUserRole(undefined)}>

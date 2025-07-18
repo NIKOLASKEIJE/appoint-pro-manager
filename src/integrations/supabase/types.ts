@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_tokens: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          name: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           attendance_status: string | null
@@ -325,6 +361,14 @@ export type Database = {
       is_clinic_admin: {
         Args: { p_user_id: string; p_clinic_id: string }
         Returns: boolean
+      }
+      validate_api_token: {
+        Args: { p_token_hash: string }
+        Returns: {
+          user_id: string
+          clinic_id: string
+          token_valid: boolean
+        }[]
       }
     }
     Enums: {

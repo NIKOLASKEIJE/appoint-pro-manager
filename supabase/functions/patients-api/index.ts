@@ -29,33 +29,63 @@ serve(async (req) => {
       )
     }
 
-    // Verify JWT token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authorization.replace('Bearer ', '')
-    )
+    let user: any = null;
+    let clinic_id: string | null = null;
 
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired token' }), 
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // Check if it's an API token (64 hex chars) or JWT
+    const token = authorization.replace('Bearer ', '');
+    
+    if (token.length === 64 && /^[a-f0-9]+$/.test(token)) {
+      // It's an API token - validate using our function
+      const encoder = new TextEncoder();
+      const data = encoder.encode(token);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const tokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const { data: tokenValidation, error: tokenError } = await supabase
+        .rpc('validate_api_token', { p_token_hash: tokenHash })
+        .single();
+
+      if (tokenError || !tokenValidation || !tokenValidation.token_valid) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid API token' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Set user data from token validation
+      user = { id: tokenValidation.user_id };
+      clinic_id = tokenValidation.clinic_id;
+    } else {
+      // It's a JWT token - verify normally
+      const { data: { user: jwtUser }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !jwtUser) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JWT token' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      user = jwtUser;
+
+      // Get user's clinic ID from user_roles table
+      const { data: userRoles, error: userRoleError } = await supabase
+        .from('user_roles')
+        .select('clinic_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (userRoleError || !userRoles) {
+        return new Response(
+          JSON.stringify({ error: 'User not associated with any clinic' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      clinic_id = userRoles.clinic_id;
     }
-
-    // Get user's clinic
-    const { data: userRoles, error: roleError } = await supabase
-      .from('user_roles')
-      .select('clinic_id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (roleError || !userRoles) {
-      return new Response(
-        JSON.stringify({ error: 'User not associated with any clinic' }), 
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const clinic_id = userRoles.clinic_id
     const url = new URL(req.url)
     const method = req.method
     const pathParts = url.pathname.split('/').filter(Boolean)
