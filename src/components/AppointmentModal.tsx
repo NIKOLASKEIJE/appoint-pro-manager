@@ -40,7 +40,6 @@ import { useAppointments, CreateAppointmentData, Appointment } from '@/hooks/use
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { usePatients } from '@/hooks/usePatients';
 import { PatientModal } from './PatientModal';
-import { AttendanceStatusBadge } from './AttendanceStatusBadge';
 
 const appointmentSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -51,6 +50,7 @@ const appointmentSchema = z.object({
   }),
   start_time: z.string().min(1, 'Horário de início é obrigatório'),
   duration: z.string().min(1, 'Duração é obrigatória'),
+  attendance_status: z.string().optional(),
 });
 
 type AppointmentForm = z.infer<typeof appointmentSchema>;
@@ -63,7 +63,7 @@ interface AppointmentModalProps {
 }
 
 export function AppointmentModal({ open, onOpenChange, selectedDate, appointment }: AppointmentModalProps) {
-  const { createAppointment, updateAppointment, deleteAppointment, creating } = useAppointments();
+  const { createAppointment, updateAppointment, updateAttendanceStatus, deleteAppointment, creating } = useAppointments();
   const { professionals } = useProfessionals();
   const { patients, fetchPatients } = usePatients();
   const [showPatientModal, setShowPatientModal] = useState(false);
@@ -75,12 +75,21 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
     defaultValues: {
       title: '',
       patient_id: '',
-      professional_id: '',
-      date: selectedDate || new Date(),
-      start_time: '',
-      duration: '60',
-    },
-  });
+        professional_id: '',
+        date: selectedDate || new Date(),
+        start_time: '',
+        duration: '60',
+        attendance_status: 'scheduled',
+      },
+    });
+
+    const attendanceStatusOptions = [
+      { value: 'scheduled', label: 'Agendado' },
+      { value: 'attended', label: 'Compareceu' },
+      { value: 'no_show', label: 'Não compareceu' },
+      { value: 'cancelled', label: 'Cancelado' },
+      { value: 'rescheduled', label: 'Remarcado' },
+    ];
 
   // Update form when appointment changes
   useEffect(() => {
@@ -92,6 +101,7 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
         date: new Date(appointment.start_time),
         start_time: format(new Date(appointment.start_time), 'HH:mm'),
         duration: ((new Date(appointment.end_time).getTime() - new Date(appointment.start_time).getTime()) / (1000 * 60)).toString(),
+        attendance_status: appointment.attendance_status || 'scheduled',
       });
     } else {
       form.reset({
@@ -101,6 +111,7 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
         date: selectedDate || new Date(),
         start_time: '',
         duration: '60',
+        attendance_status: 'scheduled',
       });
     }
   }, [appointment, selectedDate, form]);
@@ -124,6 +135,10 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
 
       if (appointment) {
         await updateAppointment(appointment.id, appointmentData);
+        // Update attendance status if it changed
+        if (data.attendance_status && data.attendance_status !== appointment.attendance_status) {
+          await updateAttendanceStatus(appointment.id, data.attendance_status);
+        }
       } else {
         await createAppointment(appointmentData);
       }
@@ -397,13 +412,30 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
             </div>
 
             {appointment && (
-              <div className="space-y-2">
-                <FormLabel>Status de Presença</FormLabel>
-                <AttendanceStatusBadge 
-                  appointmentId={appointment.id}
-                  currentStatus={appointment.attendance_status || 'scheduled'}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="attendance_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status de Presença</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Selecionar status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border-border z-50">
+                        {attendanceStatusOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <DialogFooter className="pt-4 flex-col sm:flex-row gap-2">
