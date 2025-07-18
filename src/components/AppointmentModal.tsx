@@ -40,6 +40,7 @@ import { useAppointments, CreateAppointmentData, Appointment } from '@/hooks/use
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { usePatients } from '@/hooks/usePatients';
 import { PatientModal } from './PatientModal';
+import { AttendanceStatusBadge } from './AttendanceStatusBadge';
 
 const appointmentSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -394,6 +395,16 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
                 )}
               />
             </div>
+
+            {appointment && (
+              <div className="space-y-2">
+                <FormLabel>Status de Presença</FormLabel>
+                <AttendanceStatusBadge 
+                  appointmentId={appointment.id}
+                  currentStatus={appointment.attendance_status || 'scheduled'}
+                />
+              </div>
+            )}
 
             <DialogFooter className="pt-4 flex-col sm:flex-row gap-2">
               <div className="flex flex-1 gap-2">
