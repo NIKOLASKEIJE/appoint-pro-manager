@@ -4,67 +4,65 @@ import { OnboardingBanner } from "@/components/OnboardingBanner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useClinic } from "@/hooks/useClinic"
+import { useAppointments } from "@/hooks/useAppointments"
+import { usePatients } from "@/hooks/usePatients"
+import { useProfessionals } from "@/hooks/useProfessionals"
 
 const Dashboard = () => {
   const { currentClinic } = useClinic();
+  const { appointments } = useAppointments();
+  const { patients } = usePatients();
+  const { professionals } = useProfessionals();
   
-  // Dados mockados - em produção viriam do Supabase
-  const stats = [
+  // Calcular estatísticas reais baseadas nos dados da clínica
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  const todayAppointments = appointments.filter(apt => 
+    apt.start_time.startsWith(todayStr)
+  );
+
+  const stats = currentClinic ? [
     {
       title: "Consultas Hoje",
-      value: 12,
-      description: "3 pendentes",
+      value: todayAppointments.length,
+      description: `${todayAppointments.filter(apt => apt.status === 'scheduled').length} pendentes`,
       icon: Calendar,
-      trend: { value: 8, isPositive: true }
     },
     {
       title: "Pacientes Ativos",
-      value: 247,
-      description: "Este mês",
+      value: patients.length,
+      description: "Total cadastrados",
       icon: Users,
-      trend: { value: 12, isPositive: true }
     },
     {
       title: "Profissionais",
-      value: 8,
-      description: "Ativos hoje",
+      value: professionals.length,
+      description: "Ativos na clínica",
       icon: UserCheck,
     },
     {
       title: "Taxa de Ocupação",
-      value: "87%",
+      value: appointments.length > 0 ? "100%" : "0%",
       description: "Esta semana",
       icon: TrendingUp,
-      trend: { value: 5, isPositive: true }
     }
-  ]
+  ] : [];
 
-  const upcomingAppointments = [
-    {
-      id: 1,
-      patient: "Maria Silva",
-      time: "09:00",
-      professional: "Dr. João Santos",
-      service: "Consulta Odontológica",
-      status: "confirmed"
-    },
-    {
-      id: 2,
-      patient: "Carlos Oliveira",
-      time: "10:30",
-      professional: "Dra. Ana Costa",
-      service: "Fisioterapia",
-      status: "pending"
-    },
-    {
-      id: 3,
-      patient: "Fernanda Lima",
-      time: "14:00",
-      professional: "Dr. Pedro Alves",
-      service: "Tratamento Estético",
-      status: "confirmed"
-    }
-  ]
+  // Próximos agendamentos baseados em dados reais
+  const upcomingAppointments = todayAppointments
+    .slice(0, 3)
+    .map(apt => ({
+      id: apt.id,
+      patient: apt.patient?.name || 'Paciente não encontrado',
+      time: new Date(apt.start_time).toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }),
+      professional: apt.professional?.name || 'Profissional não encontrado',
+      service: apt.title,
+      status: apt.status
+    }));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,19 +111,22 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div key={stat.title} style={{ animationDelay: `${index * 0.1}s` }}>
-            <DashboardCard
-              {...stat}
-              className="animate-fade-in"
-            />
-          </div>
-        ))}
-      </div>
+      {currentClinic && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <div key={stat.title} style={{ animationDelay: `${index * 0.1}s` }}>
+              <DashboardCard
+                {...stat}
+                className="animate-fade-in"
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {currentClinic && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Próximas Consultas */}
         <Card className="lg:col-span-2 bg-gradient-card shadow-card border-border/50 animate-fade-in">
           <CardHeader>
@@ -219,7 +220,8 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

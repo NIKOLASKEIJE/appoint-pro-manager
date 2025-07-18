@@ -10,6 +10,8 @@ export interface Patient {
   phone?: string;
   email?: string;
   notes?: string;
+  cpf?: string;
+  birth_date?: string;
   clinic_id: string;
   created_at: string;
   updated_at: string;
@@ -17,9 +19,11 @@ export interface Patient {
 
 export interface CreatePatientData {
   name: string;
+  cpf: string;
   phone?: string;
   email?: string;
   notes?: string;
+  birth_date?: string;
 }
 
 export function usePatients() {

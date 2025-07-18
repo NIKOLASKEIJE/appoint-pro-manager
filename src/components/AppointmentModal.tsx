@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, addHours } from 'date-fns';
-import { CalendarIcon, Clock, User, UserCheck } from 'lucide-react';
+import { CalendarIcon, Clock, User, UserCheck, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,6 +39,7 @@ import { z } from 'zod';
 import { useAppointments, CreateAppointmentData } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { usePatients } from '@/hooks/usePatients';
+import { PatientModal } from './PatientModal';
 
 const appointmentSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -63,6 +64,7 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
   const { createAppointment, creating } = useAppointments();
   const { professionals } = useProfessionals();
   const { patients } = usePatients();
+  const [showPatientModal, setShowPatientModal] = useState(false);
 
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
@@ -166,6 +168,18 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <div className="p-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-center mb-2"
+                            onClick={() => setShowPatientModal(true)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Cadastrar Novo Paciente
+                          </Button>
+                        </div>
                         {patients.map((patient) => (
                           <SelectItem key={patient.id} value={patient.id}>
                             {patient.name}
@@ -329,6 +343,14 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
           </form>
         </Form>
       </DialogContent>
+      
+      <PatientModal
+        open={showPatientModal}
+        onOpenChange={setShowPatientModal}
+        onPatientCreated={(patient) => {
+          form.setValue('patient_id', patient.id);
+        }}
+      />
     </Dialog>
   );
 }
