@@ -1,12 +1,39 @@
+import { useState } from 'react';
 import { UserCheck, Plus, Search, Edit, Trash2, Mail, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { useProfessionals } from '@/hooks/useProfessionals';
+import { useProfessionals, Professional } from '@/hooks/useProfessionals';
+import { ProfessionalModal } from '@/components/ProfessionalModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Profissionais = () => {
-  const { professionals, loading } = useProfessionals();
+  const { professionals, loading, deleteProfessional } = useProfessionals();
+  const [showProfessionalModal, setShowProfessionalModal] = useState(false);
+  const [editingProfessional, setEditingProfessional] = useState<Professional | undefined>();
+  const [deletingProfessional, setDeletingProfessional] = useState<Professional | undefined>();
+
+  const handleEditProfessional = (professional: Professional) => {
+    setEditingProfessional(professional);
+    setShowProfessionalModal(true);
+  };
+
+  const handleDeleteProfessional = async () => {
+    if (deletingProfessional) {
+      await deleteProfessional(deletingProfessional.id);
+      setDeletingProfessional(undefined);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -36,7 +63,7 @@ const Profissionais = () => {
             Gerencie a equipe da sua clínica
           </p>
         </div>
-        <Button variant="medical">
+        <Button variant="medical" onClick={() => setShowProfessionalModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Novo Profissional
         </Button>
@@ -114,10 +141,15 @@ const Profissionais = () => {
                     <Button variant="ghost" size="sm">
                       <Calendar className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditProfessional(professional)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setDeletingProfessional(professional)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -138,7 +170,7 @@ const Profissionais = () => {
               <p className="text-muted-foreground mb-4">
                 Comece adicionando membros à sua equipe
               </p>
-              <Button variant="medical">
+              <Button variant="medical" onClick={() => setShowProfessionalModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Primeiro Profissional
               </Button>
@@ -146,6 +178,36 @@ const Profissionais = () => {
           </CardContent>
         </Card>
       )}
+
+      <ProfessionalModal
+        open={showProfessionalModal}
+        onOpenChange={(open) => {
+          setShowProfessionalModal(open);
+          if (!open) setEditingProfessional(undefined);
+        }}
+        professional={editingProfessional}
+      />
+
+      <AlertDialog open={!!deletingProfessional} onOpenChange={() => setDeletingProfessional(undefined)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Profissional</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o profissional {deletingProfessional?.name}? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteProfessional}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

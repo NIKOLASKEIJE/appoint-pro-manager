@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { usePatients, CreatePatientData } from '@/hooks/usePatients';
+import { usePatients, CreatePatientData, Patient } from '@/hooks/usePatients';
 
 const patientSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -38,28 +38,35 @@ type PatientForm = z.infer<typeof patientSchema>;
 interface PatientModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  patient?: Patient;
   onPatientCreated?: (patient: any) => void;
 }
 
-export function PatientModal({ open, onOpenChange, onPatientCreated }: PatientModalProps) {
-  const { createPatient } = usePatients();
+export function PatientModal({ 
+  open, 
+  onOpenChange, 
+  patient,
+  onPatientCreated 
+}: PatientModalProps) {
+  const { createPatient, updatePatient } = usePatients();
   const [creating, setCreating] = useState(false);
 
   const form = useForm<PatientForm>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
-      name: '',
-      cpf: '',
-      phone: '',
-      email: '',
-      birth_date: '',
-      notes: '',
+      name: patient?.name || '',
+      cpf: patient?.cpf || '',
+      phone: patient?.phone || '',
+      email: patient?.email || '',
+      birth_date: patient?.birth_date || '',
+      notes: patient?.notes || '',
     },
   });
 
   const onSubmit = async (data: PatientForm) => {
     try {
       setCreating(true);
+      
       const patientData: CreatePatientData = {
         name: data.name,
         cpf: data.cpf,
@@ -68,11 +75,18 @@ export function PatientModal({ open, onOpenChange, onPatientCreated }: PatientMo
         birth_date: data.birth_date || undefined,
         notes: data.notes || undefined,
       };
-
-      const newPatient = await createPatient(patientData);
-      if (newPatient && onPatientCreated) {
-        onPatientCreated(newPatient);
+      
+      if (patient) {
+        // Editando paciente existente
+        await updatePatient(patient.id, patientData);
+      } else {
+        // Criando novo paciente
+        const newPatient = await createPatient(patientData);
+        if (newPatient && onPatientCreated) {
+          onPatientCreated(newPatient);
+        }
       }
+      
       form.reset();
       onOpenChange(false);
     } catch (error) {
@@ -105,10 +119,10 @@ export function PatientModal({ open, onOpenChange, onPatientCreated }: PatientMo
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
-            Novo Paciente
+            {patient ? 'Editar Paciente' : 'Novo Paciente'}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Cadastre um novo paciente no sistema
+            {patient ? 'Atualize os dados do paciente' : 'Preencha os dados do novo paciente'}
           </DialogDescription>
         </DialogHeader>
 
@@ -263,7 +277,7 @@ export function PatientModal({ open, onOpenChange, onPatientCreated }: PatientMo
                 variant="medical"
                 disabled={creating}
               >
-                {creating ? 'Criando...' : 'Cadastrar Paciente'}
+                {creating ? 'Salvando...' : (patient ? 'Atualizar' : 'Criar Paciente')}
               </Button>
             </DialogFooter>
           </form>

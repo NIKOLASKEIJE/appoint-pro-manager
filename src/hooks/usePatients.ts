@@ -90,6 +90,66 @@ export function usePatients() {
     }
   };
 
+  const updatePatient = async (id: string, patientData: Partial<CreatePatientData>) => {
+    if (!user || !currentClinic) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .update(patientData)
+        .eq('id', id)
+        .eq('clinic_id', currentClinic.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setPatients(prev => prev.map(p => p.id === id ? data : p));
+      toast({
+        title: "Sucesso",
+        description: "Paciente atualizado com sucesso!",
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar paciente:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o paciente.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deletePatient = async (id: string) => {
+    if (!user || !currentClinic) return;
+
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', id)
+        .eq('clinic_id', currentClinic.id);
+
+      if (error) throw error;
+
+      setPatients(prev => prev.filter(p => p.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Paciente removido com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao excluir paciente:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o paciente.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (user && currentClinic) {
       fetchPatients();
@@ -104,5 +164,7 @@ export function usePatients() {
     loading,
     fetchPatients,
     createPatient,
+    updatePatient,
+    deletePatient,
   };
 }

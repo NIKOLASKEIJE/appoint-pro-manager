@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { format, addHours } from 'date-fns';
-import { CalendarIcon, Clock, User, UserCheck, Plus } from 'lucide-react';
+import { CalendarIcon, Clock, User, UserCheck, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -65,6 +65,8 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
   const { professionals } = useProfessionals();
   const { patients, fetchPatients } = usePatients();
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [professionalSearch, setProfessionalSearch] = useState('');
 
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
@@ -117,6 +119,15 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
     { value: '90', label: '1h 30min' },
     { value: '120', label: '2 horas' },
   ];
+
+  const filteredPatients = patients.filter(patient =>
+    patient.name.toLowerCase().includes(patientSearch.toLowerCase())
+  );
+
+  const filteredProfessionals = professionals.filter(professional =>
+    professional.name.toLowerCase().includes(professionalSearch.toLowerCase()) ||
+    professional.specialty.toLowerCase().includes(professionalSearch.toLowerCase())
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -179,8 +190,17 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
                             <Plus className="w-4 h-4 mr-2" />
                             Cadastrar Novo Paciente
                           </Button>
+                          <div className="relative mb-2">
+                            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Buscar paciente..."
+                              value={patientSearch}
+                              onChange={(e) => setPatientSearch(e.target.value)}
+                              className="pl-8 h-8"
+                            />
+                          </div>
                         </div>
-                        {patients.map((patient) => (
+                        {filteredPatients.map((patient) => (
                           <SelectItem key={patient.id} value={patient.id}>
                             {patient.name}
                           </SelectItem>
@@ -208,7 +228,18 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {professionals.map((professional) => (
+                        <div className="p-2">
+                          <div className="relative mb-2">
+                            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Buscar profissional..."
+                              value={professionalSearch}
+                              onChange={(e) => setProfessionalSearch(e.target.value)}
+                              className="pl-8 h-8"
+                            />
+                          </div>
+                        </div>
+                        {filteredProfessionals.map((professional) => (
                           <SelectItem key={professional.id} value={professional.id}>
                             <div className="flex items-center gap-2">
                               <div 

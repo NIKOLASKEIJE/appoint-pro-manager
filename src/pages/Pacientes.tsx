@@ -4,12 +4,36 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { usePatients } from '@/hooks/usePatients';
+import { usePatients, Patient } from '@/hooks/usePatients';
 import { PatientModal } from '@/components/PatientModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Pacientes = () => {
-  const { patients, loading } = usePatients();
+  const { patients, loading, deletePatient } = usePatients();
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | undefined>();
+  const [deletingPatient, setDeletingPatient] = useState<Patient | undefined>();
+
+  const handleEditPatient = (patient: Patient) => {
+    setEditingPatient(patient);
+    setShowPatientModal(true);
+  };
+
+  const handleDeletePatient = async () => {
+    if (deletingPatient) {
+      await deletePatient(deletingPatient.id);
+      setDeletingPatient(undefined);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -117,10 +141,15 @@ const Pacientes = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditPatient(patient)}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setDeletingPatient(patient)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -152,8 +181,33 @@ const Pacientes = () => {
 
       <PatientModal
         open={showPatientModal}
-        onOpenChange={setShowPatientModal}
+        onOpenChange={(open) => {
+          setShowPatientModal(open);
+          if (!open) setEditingPatient(undefined);
+        }}
+        patient={editingPatient}
       />
+
+      <AlertDialog open={!!deletingPatient} onOpenChange={() => setDeletingPatient(undefined)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Paciente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o paciente {deletingPatient?.name}? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeletePatient}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

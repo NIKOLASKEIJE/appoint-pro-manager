@@ -85,6 +85,66 @@ export function useProfessionals() {
     }
   };
 
+  const updateProfessional = async (id: string, professionalData: Partial<CreateProfessionalData>) => {
+    if (!user || !currentClinic) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('professionals')
+        .update(professionalData)
+        .eq('id', id)
+        .eq('clinic_id', currentClinic.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProfessionals(prev => prev.map(p => p.id === id ? data : p));
+      toast({
+        title: "Sucesso",
+        description: "Profissional atualizado com sucesso!",
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar profissional:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o profissional.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deleteProfessional = async (id: string) => {
+    if (!user || !currentClinic) return;
+
+    try {
+      const { error } = await supabase
+        .from('professionals')
+        .delete()
+        .eq('id', id)
+        .eq('clinic_id', currentClinic.id);
+
+      if (error) throw error;
+
+      setProfessionals(prev => prev.filter(p => p.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Profissional removido com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao excluir profissional:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o profissional.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (user && currentClinic) {
       fetchProfessionals();
@@ -99,5 +159,7 @@ export function useProfessionals() {
     loading,
     fetchProfessionals,
     createProfessional,
+    updateProfessional,
+    deleteProfessional,
   };
 }
