@@ -3,51 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useProfessionals } from '@/hooks/useProfessionals';
 
 const Profissionais = () => {
-  // Mock data - em produção viria do Supabase
-  const professionals = [
-    {
-      id: 1,
-      name: "Dr. João Santos",
-      specialty: "Odontologia",
-      email: "joao.santos@clinica.com",
-      color: "#3B82F6",
-      status: "ativo",
-      workingDays: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"],
-      appointments: 15
-    },
-    {
-      id: 2,
-      name: "Dra. Ana Costa",
-      specialty: "Fisioterapia",
-      email: "ana.costa@clinica.com",
-      color: "#10B981",
-      status: "ativo",
-      workingDays: ["Segunda", "Quarta", "Sexta"],
-      appointments: 8
-    },
-    {
-      id: 3,
-      name: "Dr. Pedro Alves",
-      specialty: "Estética",
-      email: "pedro.alves@clinica.com",
-      color: "#8B5CF6",
-      status: "ativo",
-      workingDays: ["Terça", "Quinta", "Sábado"],
-      appointments: 12
-    },
-    {
-      id: 4,
-      name: "Dra. Maria Fernandes",
-      specialty: "Odontologia",
-      email: "maria.fernandes@clinica.com",
-      color: "#F59E0B",
-      status: "afastado",
-      workingDays: [],
-      appointments: 0
-    }
-  ]
+  const { professionals, loading } = useProfessionals();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,62 +72,59 @@ const Profissionais = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {professionals.map((professional) => (
-              <div 
-                key={professional.id}
-                className="flex items-center justify-between p-4 bg-background rounded-lg border border-border/50 hover:shadow-sm transition-all duration-200"
-              >
-                <div className="flex items-center gap-4">
-                  <div 
-                    className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: `${professional.color}20`, border: `2px solid ${professional.color}` }}
-                  >
-                    <span className="font-semibold" style={{ color: professional.color }}>
-                      {professional.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground">{professional.name}</h4>
-                      <Badge className={`text-xs ${getStatusColor(professional.status)}`}>
-                        {professional.status}
-                      </Badge>
-                      <Badge className={`text-xs ${getSpecialtyColor(professional.specialty)}`}>
-                        {professional.specialty}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        {professional.email}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {professional.appointments} consultas hoje
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="text-muted-foreground">Carregando profissionais...</div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {professionals.map((professional) => (
+                <div 
+                  key={professional.id}
+                  className="flex items-center justify-between p-4 bg-background rounded-lg border border-border/50 hover:shadow-sm transition-all duration-200"
+                >
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${professional.color}20`, border: `2px solid ${professional.color}` }}
+                    >
+                      <span className="font-semibold" style={{ color: professional.color }}>
+                        {professional.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                       </span>
                     </div>
-                    {professional.workingDays.length > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Dias de trabalho: {professional.workingDays.join(', ')}
-                      </p>
-                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-foreground">{professional.name}</h4>
+                        <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
+                          ativo
+                        </Badge>
+                        <Badge className={`text-xs ${getSpecialtyColor(professional.specialty)}`}>
+                          {professional.specialty}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <UserCheck className="w-3 h-3" />
+                          {professional.specialty}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Calendar className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Calendar className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

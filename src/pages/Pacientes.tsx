@@ -1,40 +1,15 @@
+import { useState } from 'react';
 import { Users, Plus, Search, Edit, Trash2, Phone, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { usePatients } from '@/hooks/usePatients';
+import { PatientModal } from '@/components/PatientModal';
 
 const Pacientes = () => {
-  // Mock data - em produção viria do Supabase
-  const patients = [
-    {
-      id: 1,
-      name: "Maria Silva Santos",
-      phone: "(11) 99999-9999",
-      email: "maria.silva@email.com",
-      lastVisit: "2024-01-15",
-      status: "ativo",
-      notes: "Paciente regular, sem alergias conhecidas"
-    },
-    {
-      id: 2,
-      name: "Carlos Oliveira Costa",
-      phone: "(11) 88888-8888",
-      email: "carlos.oliveira@email.com",
-      lastVisit: "2024-01-10",
-      status: "ativo",
-      notes: "Alérgico a penicilina"
-    },
-    {
-      id: 3,
-      name: "Ana Paula Ferreira",
-      phone: "(11) 77777-7777",
-      email: "ana.ferreira@email.com",
-      lastVisit: "2023-12-20",
-      status: "inativo",
-      notes: "Paciente em pausa no tratamento"
-    }
-  ]
+  const { patients, loading } = usePatients();
+  const [showPatientModal, setShowPatientModal] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -55,7 +30,7 @@ const Pacientes = () => {
             Gerencie todos os pacientes da sua clínica
           </p>
         </div>
-        <Button variant="medical">
+        <Button variant="medical" onClick={() => setShowPatientModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Novo Paciente
         </Button>
@@ -91,56 +66,68 @@ const Pacientes = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {patients.map((patient) => (
-              <div 
-                key={patient.id}
-                className="flex items-center justify-between p-4 bg-background rounded-lg border border-border/50 hover:shadow-sm transition-all duration-200"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">
-                      {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground">{patient.name}</h4>
-                      <Badge className={`text-xs ${getStatusColor(patient.status)}`}>
-                        {patient.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
-                        {patient.phone}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        {patient.email}
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="text-muted-foreground">Carregando pacientes...</div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {patients.map((patient) => (
+                <div 
+                  key={patient.id}
+                  className="flex items-center justify-between p-4 bg-background rounded-lg border border-border/50 hover:shadow-sm transition-all duration-200"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">
+                        {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Última visita: {new Date(patient.lastVisit).toLocaleDateString('pt-BR')}
-                    </p>
-                    {patient.notes && (
-                      <p className="text-xs text-muted-foreground mt-1 italic">
-                        {patient.notes}
-                      </p>
-                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-foreground">{patient.name}</h4>
+                        <Badge className="text-xs bg-green-100 text-green-800 border-green-200">
+                          ativo
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        {patient.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {patient.phone}
+                          </span>
+                        )}
+                        {patient.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {patient.email}
+                          </span>
+                        )}
+                      </div>
+                      {patient.birth_date && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Nascimento: {new Date(patient.birth_date).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      {patient.notes && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">
+                          {patient.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -154,7 +141,7 @@ const Pacientes = () => {
               <p className="text-muted-foreground mb-4">
                 Comece adicionando seu primeiro paciente
               </p>
-              <Button variant="medical">
+              <Button variant="medical" onClick={() => setShowPatientModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Primeiro Paciente
               </Button>
@@ -162,6 +149,11 @@ const Pacientes = () => {
           </CardContent>
         </Card>
       )}
+
+      <PatientModal
+        open={showPatientModal}
+        onOpenChange={setShowPatientModal}
+      />
     </div>
   )
 }

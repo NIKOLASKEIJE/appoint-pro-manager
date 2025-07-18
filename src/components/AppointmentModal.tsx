@@ -63,7 +63,7 @@ interface AppointmentModalProps {
 export function AppointmentModal({ open, onOpenChange, selectedDate }: AppointmentModalProps) {
   const { createAppointment, creating } = useAppointments();
   const { professionals } = useProfessionals();
-  const { patients } = usePatients();
+  const { patients, fetchPatients } = usePatients();
   const [showPatientModal, setShowPatientModal] = useState(false);
 
   const form = useForm<AppointmentForm>({
@@ -349,6 +349,7 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
         onOpenChange={setShowPatientModal}
         onPatientCreated={(patient) => {
           form.setValue('patient_id', patient.id);
+          fetchPatients(); // Atualiza a lista de pacientes
         }}
       />
     </Dialog>
