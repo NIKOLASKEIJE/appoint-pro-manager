@@ -143,8 +143,6 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
         await createAppointment(appointmentData);
       }
       onOpenChange(false);
-      // Force page reload to ensure UI updates
-      window.location.reload();
     } catch (error) {
       // Error is handled in the hook
     }

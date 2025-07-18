@@ -105,8 +105,6 @@ export function useAppointments() {
         description: "Agendamento criado com sucesso!",
       });
 
-      // Force page reload to show new appointment immediately
-      window.location.reload();
       return data;
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
