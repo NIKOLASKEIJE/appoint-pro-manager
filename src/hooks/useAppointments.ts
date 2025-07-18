@@ -37,6 +37,7 @@ export interface CreateAppointmentData {
   patient_id: string;
   professional_id: string;
   status?: string;
+  attendance_status?: string;
 }
 
 export function useAppointments() {
@@ -245,9 +246,10 @@ export function useAppointments() {
             table: 'appointments',
             filter: `clinic_id=eq.${currentClinic.id}`
           },
-          (payload) => {
+           (payload) => {
             console.log('Real-time appointment change:', payload);
-            fetchAppointments(); // Refetch to get latest data with joins
+            // Force immediate refetch for real-time updates
+            setTimeout(() => fetchAppointments(), 100);
           }
         )
         .subscribe();

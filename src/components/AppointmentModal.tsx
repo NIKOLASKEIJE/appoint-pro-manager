@@ -125,20 +125,17 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
       const endDateTime = new Date(startDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + parseInt(data.duration));
 
-      const appointmentData: CreateAppointmentData = {
+      const appointmentData: CreateAppointmentData & { attendance_status?: string } = {
         title: data.title,
         patient_id: data.patient_id,
         professional_id: data.professional_id,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
+        attendance_status: data.attendance_status,
       };
 
       if (appointment) {
         await updateAppointment(appointment.id, appointmentData);
-        // Update attendance status if it changed
-        if (data.attendance_status && data.attendance_status !== appointment.attendance_status) {
-          await updateAttendanceStatus(appointment.id, data.attendance_status);
-        }
       } else {
         await createAppointment(appointmentData);
       }
