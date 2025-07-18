@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/hooks/useAppointments';
+import { AttendanceStatusBadge } from '@/components/AttendanceStatusBadge';
 
 interface DailyCalendarProps {
   appointments: Appointment[];
@@ -145,6 +146,12 @@ export function DailyCalendar({
                         </div>
                         <div className="text-xs mt-1 text-white/80">
                           {appointment.professional?.name} - {appointment.professional?.specialty}
+                        </div>
+                        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                          <AttendanceStatusBadge 
+                            appointmentId={appointment.id}
+                            currentStatus={appointment.attendance_status || 'scheduled'}
+                          />
                         </div>
                       </div>
                     ))}

@@ -134,8 +134,22 @@ export function MonthlyCalendar({
                           onAppointmentClick?.(appointment);
                         }}
                       >
-                        <div className="font-medium truncate">
-                          {format(parseISO(appointment.start_time), 'HH:mm')} {appointment.title}
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium truncate">
+                            {format(parseISO(appointment.start_time), 'HH:mm')} {appointment.title}
+                          </div>
+                          {appointment.attendance_status === 'attended' && (
+                            <div className="w-2 h-2 bg-green-400 rounded-full ml-1" title="Compareceu" />
+                          )}
+                          {appointment.attendance_status === 'no_show' && (
+                            <div className="w-2 h-2 bg-red-400 rounded-full ml-1" title="Não compareceu" />
+                          )}
+                          {appointment.attendance_status === 'cancelled' && (
+                            <div className="w-2 h-2 bg-gray-400 rounded-full ml-1" title="Cancelado" />
+                          )}
+                          {appointment.attendance_status === 'rescheduled' && (
+                            <div className="w-2 h-2 bg-yellow-400 rounded-full ml-1" title="Remarcado" />
+                          )}
                         </div>
                         <div className="truncate text-white/80">
                           {appointment.patient?.name}

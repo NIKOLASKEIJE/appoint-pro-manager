@@ -10,6 +10,7 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   status: string;
+  attendance_status?: string;
   patient_id: string;
   professional_id: string;
   clinic_id: string;
@@ -156,6 +157,53 @@ export function useAppointments() {
     }
   };
 
+  const updateAttendanceStatus = async (id: string, attendance_status: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ attendance_status })
+        .eq('id', id)
+        .select(`
+          *,
+          patient:patients(id, name, phone, email),
+          professional:professionals(id, name, specialty, color)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      // Optimistic update
+      setAppointments(prev => 
+        prev.map(appointment => 
+          appointment.id === id ? data : appointment
+        )
+      );
+
+      const statusLabels: Record<string, string> = {
+        'attended': 'Compareceu',
+        'no_show': 'Não compareceu',
+        'cancelled': 'Cancelado',
+        'rescheduled': 'Remarcado',
+        'scheduled': 'Agendado'
+      };
+
+      toast({
+        title: "Sucesso",
+        description: `Status atualizado para: ${statusLabels[attendance_status]}`,
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao atualizar status de presença:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const deleteAppointment = async (id: string) => {
     try {
       const { error } = await supabase
@@ -165,6 +213,7 @@ export function useAppointments() {
 
       if (error) throw error;
 
+      // Optimistic update
       setAppointments(prev => prev.filter(appointment => appointment.id !== id));
       toast({
         title: "Sucesso",
@@ -219,6 +268,7 @@ export function useAppointments() {
     fetchAppointments,
     createAppointment,
     updateAppointment,
+    updateAttendanceStatus,
     deleteAppointment,
   };
 }

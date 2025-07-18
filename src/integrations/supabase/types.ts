@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          attendance_status: string | null
           clinic_id: string
           created_at: string
           end_time: string
@@ -28,6 +29,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attendance_status?: string | null
           clinic_id: string
           created_at?: string
           end_time: string
@@ -40,6 +42,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attendance_status?: string | null
           clinic_id?: string
           created_at?: string
           end_time?: string

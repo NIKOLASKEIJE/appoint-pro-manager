@@ -72,7 +72,9 @@ export function usePatients() {
 
       if (error) throw error;
 
+      // Optimistic update - add patient immediately
       setPatients(prev => [...prev, data]);
+      
       toast({
         title: "Sucesso",
         description: "Paciente adicionado com sucesso!",
@@ -104,7 +106,9 @@ export function usePatients() {
 
       if (error) throw error;
 
+      // Optimistic update - update patient immediately
       setPatients(prev => prev.map(p => p.id === id ? data : p));
+      
       toast({
         title: "Sucesso",
         description: "Paciente atualizado com sucesso!",
@@ -134,7 +138,9 @@ export function usePatients() {
 
       if (error) throw error;
 
+      // Optimistic update - remove patient immediately
       setPatients(prev => prev.filter(p => p.id !== id));
+      
       toast({
         title: "Sucesso",
         description: "Paciente removido com sucesso!",

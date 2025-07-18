@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/hooks/useAppointments';
+import { AttendanceStatusBadge } from '@/components/AttendanceStatusBadge';
 
 interface WeeklyCalendarProps {
   appointments: Appointment[];
@@ -159,6 +160,12 @@ export function WeeklyCalendar({
                             <span>
                               {format(parseISO(appointment.start_time), 'HH:mm')} - {format(parseISO(appointment.end_time), 'HH:mm')}
                             </span>
+                          </div>
+                          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                            <AttendanceStatusBadge 
+                              appointmentId={appointment.id}
+                              currentStatus={appointment.attendance_status || 'scheduled'}
+                            />
                           </div>
                         </div>
                       ))}

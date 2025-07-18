@@ -67,7 +67,9 @@ export function useProfessionals() {
 
       if (error) throw error;
 
+      // Optimistic update - add professional immediately
       setProfessionals(prev => [...prev, data]);
+      
       toast({
         title: "Sucesso",
         description: "Profissional adicionado com sucesso!",
@@ -99,7 +101,9 @@ export function useProfessionals() {
 
       if (error) throw error;
 
+      // Optimistic update - update professional immediately
       setProfessionals(prev => prev.map(p => p.id === id ? data : p));
+      
       toast({
         title: "Sucesso",
         description: "Profissional atualizado com sucesso!",
@@ -129,7 +133,9 @@ export function useProfessionals() {
 
       if (error) throw error;
 
+      // Optimistic update - remove professional immediately
       setProfessionals(prev => prev.filter(p => p.id !== id));
+      
       toast({
         title: "Sucesso",
         description: "Profissional removido com sucesso!",
