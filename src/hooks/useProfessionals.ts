@@ -75,6 +75,8 @@ export function useProfessionals() {
         description: "Profissional adicionado com sucesso!",
       });
 
+      // Force page reload to show new professional immediately
+      window.location.reload();
       return data;
     } catch (error) {
       console.error('Erro ao criar profissional:', error);

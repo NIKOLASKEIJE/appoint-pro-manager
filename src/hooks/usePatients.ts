@@ -80,6 +80,8 @@ export function usePatients() {
         description: "Paciente adicionado com sucesso!",
       });
 
+      // Force page reload to show new patient immediately
+      window.location.reload();
       return data;
     } catch (error) {
       console.error('Erro ao criar paciente:', error);

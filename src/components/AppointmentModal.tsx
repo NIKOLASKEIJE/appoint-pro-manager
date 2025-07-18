@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, addHours } from 'date-fns';
-import { CalendarIcon, Clock, User, UserCheck, Plus, Search } from 'lucide-react';
+import { CalendarIcon, Clock, User, UserCheck, Plus, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -62,7 +62,7 @@ interface AppointmentModalProps {
 }
 
 export function AppointmentModal({ open, onOpenChange, selectedDate, appointment }: AppointmentModalProps) {
-  const { createAppointment, updateAppointment, creating } = useAppointments();
+  const { createAppointment, updateAppointment, deleteAppointment, creating } = useAppointments();
   const { professionals } = useProfessionals();
   const { patients, fetchPatients } = usePatients();
   const [showPatientModal, setShowPatientModal] = useState(false);
@@ -72,16 +72,37 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      title: appointment?.title || '',
-      patient_id: appointment?.patient_id || '',
-      professional_id: appointment?.professional_id || '',
-      date: appointment ? new Date(appointment.start_time) : selectedDate || new Date(),
-      start_time: appointment ? format(new Date(appointment.start_time), 'HH:mm') : '',
-      duration: appointment ? 
-        ((new Date(appointment.end_time).getTime() - new Date(appointment.start_time).getTime()) / (1000 * 60)).toString() 
-        : '60',
+      title: '',
+      patient_id: '',
+      professional_id: '',
+      date: selectedDate || new Date(),
+      start_time: '',
+      duration: '60',
     },
   });
+
+  // Update form when appointment changes
+  useEffect(() => {
+    if (appointment) {
+      form.reset({
+        title: appointment.title,
+        patient_id: appointment.patient_id,
+        professional_id: appointment.professional_id,
+        date: new Date(appointment.start_time),
+        start_time: format(new Date(appointment.start_time), 'HH:mm'),
+        duration: ((new Date(appointment.end_time).getTime() - new Date(appointment.start_time).getTime()) / (1000 * 60)).toString(),
+      });
+    } else {
+      form.reset({
+        title: '',
+        patient_id: '',
+        professional_id: '',
+        date: selectedDate || new Date(),
+        start_time: '',
+        duration: '60',
+      });
+    }
+  }, [appointment, selectedDate, form]);
 
   const onSubmit = async (data: AppointmentForm) => {
     try {
@@ -105,7 +126,20 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
       } else {
         await createAppointment(appointmentData);
       }
-      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      // Error is handled in the hook
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!appointment) return;
+    
+    const confirmed = confirm('Tem certeza que deseja excluir este agendamento?');
+    if (!confirmed) return;
+
+    try {
+      await deleteAppointment(appointment.id);
       onOpenChange(false);
     } catch (error) {
       // Error is handled in the hook
@@ -361,19 +395,35 @@ export function AppointmentModal({ open, onOpenChange, selectedDate, appointment
               />
             </div>
 
-            <DialogFooter className="pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={creating}
-              >
-                Cancelar
-              </Button>
+            <DialogFooter className="pt-4 flex-col sm:flex-row gap-2">
+              <div className="flex flex-1 gap-2">
+                {appointment && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    onClick={handleDelete}
+                    disabled={creating}
+                    className="flex-1 sm:flex-none"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir
+                  </Button>
+                )}
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={creating}
+                  className="flex-1 sm:flex-none"
+                >
+                  Cancelar
+                </Button>
+              </div>
               <Button 
                 type="submit" 
                 variant="medical"
                 disabled={creating}
+                className="flex-1 sm:flex-none"
               >
                 {creating ? (appointment ? 'Salvando...' : 'Criando...') : (appointment ? 'Salvar Alterações' : 'Criar Agendamento')}
               </Button>
