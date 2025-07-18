@@ -45,7 +45,7 @@ export function ApiTokenModal({ isOpen, onClose, onTokenCreated }: ApiTokenModal
       const response = await supabase.functions.invoke('api-tokens-management', {
         body: {
           name: name.trim(),
-          expiresInDays: expiresInDays ? parseInt(expiresInDays) : null
+          expiresInDays: expiresInDays && expiresInDays !== "0" ? parseInt(expiresInDays) : null
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`
@@ -163,7 +163,7 @@ export function ApiTokenModal({ isOpen, onClose, onTokenCreated }: ApiTokenModal
                 <SelectValue placeholder="Selecione a expiração" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nunca expira</SelectItem>
+                <SelectItem value="0">Nunca expira</SelectItem>
                 <SelectItem value="30">30 dias</SelectItem>
                 <SelectItem value="90">90 dias</SelectItem>
                 <SelectItem value="365">1 ano</SelectItem>
