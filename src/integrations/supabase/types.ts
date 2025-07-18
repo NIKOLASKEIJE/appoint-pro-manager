@@ -219,15 +219,71 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          professional_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          professional_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          professional_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_professional_id: {
+        Args: { p_user_id: string; p_clinic_id: string }
+        Returns: string
+      }
+      get_user_role_in_clinic: {
+        Args: { p_user_id: string; p_clinic_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_clinic_admin: {
+        Args: { p_user_id: string; p_clinic_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "clinic_admin" | "professional" | "receptionist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -354,6 +410,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["clinic_admin", "professional", "receptionist"],
+    },
   },
 } as const
