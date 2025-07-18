@@ -163,7 +163,7 @@ const Configuracoes = () => {
                 </div>
               ))}
               
-              {userRoles.length === 0 && (
+              {userRoles.length === 0 && !isClinicAdmin() && (
                 <div className="text-center py-8">
                   <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
