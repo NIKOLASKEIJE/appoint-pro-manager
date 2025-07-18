@@ -10,6 +10,12 @@ max_rows = 1000
 [functions.create-clinic-user]
 verify_jwt = false
 
+[functions.patients-api]
+verify_jwt = false
+
+[functions.appointments-api]
+verify_jwt = false
+
 [db]
 port = 54322
 
