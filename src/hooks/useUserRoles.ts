@@ -43,24 +43,40 @@ export function useUserRoles() {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First get user roles
+      const { data: userRolesData, error: userRolesError } = await supabase
         .from('user_roles')
-        .select(`
-          *,
-          profiles(full_name, created_by)
-        `)
+        .select('*')
         .eq('clinic_id', currentClinic.id);
 
-      if (error) throw error;
+      if (userRolesError) throw userRolesError;
+
+      if (!userRolesData || userRolesData.length === 0) {
+        setUserRoles([]);
+        setCurrentUserRole(null);
+        setLoading(false);
+        return;
+      }
+
+      // Get all user IDs to fetch profiles
+      const userIds = userRolesData.map(role => role.user_id);
       
-      // Transform data to match our interface
-      const transformedData = data?.map(role => ({
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, created_by')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.warn('Erro ao buscar perfis:', profilesError);
+      }
+
+      // Combine user roles with profiles
+      const transformedData = userRolesData.map(role => ({
         ...role,
-        profile: role.profiles && !Array.isArray(role.profiles) ? {
-          full_name: (role.profiles as any).full_name,
-          created_by: (role.profiles as any).created_by
-        } : undefined
-      })) || [];
+        profile: profilesData?.find(profile => profile.user_id === role.user_id) || undefined
+      }));
       
       setUserRoles(transformedData);
 
