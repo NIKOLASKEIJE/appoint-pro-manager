@@ -38,7 +38,9 @@ const Configuracoes = () => {
     // Simple mechanism for first user to become admin
     try {
       await createUserRole({
-        user_email: 'current-user', // This would be handled differently in real implementation
+        email: 'current-user', // Special flag for self-promotion
+        password: '',
+        full_name: '',
         role: 'clinic_admin',
       });
     } catch (error) {
@@ -119,7 +121,7 @@ const Configuracoes = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-foreground">
-                          Usuário ID: {userRole.user_id.substring(0, 8)}...
+                          {userRole.profile?.full_name || `Usuário ${userRole.user_id.substring(0, 8)}...`}
                         </span>
                         <Badge className={`text-xs ${getRoleColor(userRole.role)}`}>
                           {getRoleLabel(userRole.role)}
@@ -127,8 +129,8 @@ const Configuracoes = () => {
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <UserCheck className="w-3 h-3" />
-                          {getRoleLabel(userRole.role)}
+                          <Mail className="w-3 h-3" />
+                          ID: {userRole.user_id.substring(0, 8)}...
                         </span>
                         {userRole.professional_id && (
                           <span className="flex items-center gap-1">

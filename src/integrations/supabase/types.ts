@@ -184,6 +184,33 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_clinics: {
         Row: {
           clinic_id: string
@@ -272,6 +299,17 @@ export type Database = {
       assign_self_as_admin: {
         Args: { p_clinic_id: string }
         Returns: boolean
+      }
+      create_user_with_role: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_full_name: string
+          p_clinic_id: string
+          p_role: Database["public"]["Enums"]["user_role"]
+          p_professional_id?: string
+        }
+        Returns: Json
       }
       get_user_professional_id: {
         Args: { p_user_id: string; p_clinic_id: string }

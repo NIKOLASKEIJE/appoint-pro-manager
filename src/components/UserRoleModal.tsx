@@ -32,7 +32,9 @@ import { useUserRoles, CreateUserRoleData, UserRoleData } from '@/hooks/useUserR
 import { useProfessionals } from '@/hooks/useProfessionals';
 
 const userRoleSchema = z.object({
-  user_email: z.string().email('Email inválido'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  full_name: z.string().min(1, 'Nome é obrigatório'),
   role: z.enum(['clinic_admin', 'professional', 'receptionist'], {
     required_error: 'Papel é obrigatório',
   }),
@@ -55,7 +57,9 @@ export function UserRoleModal({ open, onOpenChange, userRole }: UserRoleModalPro
   const form = useForm<UserRoleForm>({
     resolver: zodResolver(userRoleSchema),
     defaultValues: {
-      user_email: '',
+      email: '',
+      password: '',
+      full_name: userRole?.profile?.full_name || '',
       role: 'professional',
       professional_id: userRole?.professional_id || '',
     },
@@ -68,7 +72,9 @@ export function UserRoleModal({ open, onOpenChange, userRole }: UserRoleModalPro
       setCreating(true);
       
       const roleData: CreateUserRoleData = {
-        user_email: data.user_email,
+        email: data.email,
+        password: data.password,
+        full_name: data.full_name,
         role: data.role,
         professional_id: data.role === 'professional' ? data.professional_id : undefined,
       };
@@ -111,16 +117,13 @@ export function UserRoleModal({ open, onOpenChange, userRole }: UserRoleModalPro
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="user_email"
+              name="full_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email do Usuário
-                  </FormLabel>
+                  <FormLabel>Nome Completo</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="usuario@email.com" 
+                      placeholder="Ex: Dr. João Silva" 
                       {...field}
                       className="bg-background"
                       disabled={!!userRole} // Disable when editing
@@ -130,6 +133,50 @@ export function UserRoleModal({ open, onOpenChange, userRole }: UserRoleModalPro
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email do Usuário
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="usuario@email.com" 
+                      type="email"
+                      {...field}
+                      className="bg-background"
+                      disabled={!!userRole} // Disable when editing
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {!userRole && ( // Only show password field when creating new user
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Mínimo 6 caracteres" 
+                        type="password"
+                        {...field}
+                        className="bg-background"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

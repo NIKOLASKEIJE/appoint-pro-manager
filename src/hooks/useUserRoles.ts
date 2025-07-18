@@ -14,10 +14,16 @@ export interface UserRoleData {
   professional_id?: string;
   created_at: string;
   updated_at: string;
+  profile?: {
+    full_name: string;
+    created_by?: string;
+  };
 }
 
 export interface CreateUserRoleData {
-  user_email: string;
+  email: string;
+  password: string;
+  full_name: string;
   role: UserRole;
   professional_id?: string;
 }
@@ -39,14 +45,27 @@ export function useUserRoles() {
       setLoading(true);
       const { data, error } = await supabase
         .from('user_roles')
-        .select('*')
+        .select(`
+          *,
+          profiles(full_name, created_by)
+        `)
         .eq('clinic_id', currentClinic.id);
 
       if (error) throw error;
-      setUserRoles(data || []);
+      
+      // Transform data to match our interface
+      const transformedData = data?.map(role => ({
+        ...role,
+        profile: role.profiles && !Array.isArray(role.profiles) ? {
+          full_name: (role.profiles as any).full_name,
+          created_by: (role.profiles as any).created_by
+        } : undefined
+      })) || [];
+      
+      setUserRoles(transformedData);
 
       // Get current user's role
-      const currentRole = data?.find(role => role.user_id === user.id);
+      const currentRole = transformedData?.find(role => role.user_id === user.id);
       setCurrentUserRole(currentRole?.role || null);
     } catch (error) {
       console.error('Erro ao buscar papéis dos usuários:', error);
@@ -64,9 +83,8 @@ export function useUserRoles() {
     if (!user || !currentClinic) return;
 
     try {
-      // For now, we'll use a simple approach where users can become admin
-      // if no admin exists yet
-      if (roleData.user_email === 'current-user') {
+      // Special case for self-promotion to admin
+      if (roleData.email === 'current-user') {
         const { data, error } = await supabase.rpc('assign_self_as_admin', {
           p_clinic_id: currentClinic.id
         });
@@ -74,7 +92,6 @@ export function useUserRoles() {
         if (error) throw error;
 
         if (data) {
-          // Refresh user roles
           await fetchUserRoles();
           toast({
             title: "Sucesso",
@@ -90,17 +107,41 @@ export function useUserRoles() {
         return;
       }
 
-      toast({
-        title: "Aviso",
-        description: "Para adicionar outros usuários, eles devem primeiro se registrar no sistema.",
-        variant: "destructive",
+      // Create user via edge function
+      const { data, error } = await supabase.functions.invoke('create-clinic-user', {
+        body: {
+          email: roleData.email,
+          password: roleData.password,
+          full_name: roleData.full_name,
+          clinic_id: currentClinic.id,
+          role: roleData.role,
+          professional_id: roleData.professional_id,
+        },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
       });
-      return;
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Refresh the user roles list
+      await fetchUserRoles();
+      
+      toast({
+        title: "Sucesso",
+        description: `Usuário ${roleData.full_name} criado com sucesso!`,
+      });
+
+      return data.user;
     } catch (error) {
-      console.error('Erro ao criar papel do usuário:', error);
+      console.error('Erro ao criar usuário:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o papel do usuário.",
+        description: error instanceof Error ? error.message : "Não foi possível criar o usuário.",
         variant: "destructive",
       });
       throw error;
