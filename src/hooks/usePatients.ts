@@ -153,6 +153,28 @@ export function usePatients() {
   useEffect(() => {
     if (user && currentClinic) {
       fetchPatients();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('patients-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'patients',
+            filter: `clinic_id=eq.${currentClinic.id}`
+          },
+          (payload) => {
+            console.log('Real-time patient change:', payload);
+            fetchPatients();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setLoading(false);
       setPatients([]);

@@ -36,7 +36,7 @@ import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAppointments, CreateAppointmentData } from '@/hooks/useAppointments';
+import { useAppointments, CreateAppointmentData, Appointment } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { usePatients } from '@/hooks/usePatients';
 import { PatientModal } from './PatientModal';
@@ -58,10 +58,11 @@ interface AppointmentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDate?: Date;
+  appointment?: Appointment;
 }
 
-export function AppointmentModal({ open, onOpenChange, selectedDate }: AppointmentModalProps) {
-  const { createAppointment, creating } = useAppointments();
+export function AppointmentModal({ open, onOpenChange, selectedDate, appointment }: AppointmentModalProps) {
+  const { createAppointment, updateAppointment, creating } = useAppointments();
   const { professionals } = useProfessionals();
   const { patients, fetchPatients } = usePatients();
   const [showPatientModal, setShowPatientModal] = useState(false);
@@ -71,12 +72,14 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
   const form = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      title: '',
-      patient_id: '',
-      professional_id: '',
-      date: selectedDate || new Date(),
-      start_time: '',
-      duration: '60', // 60 minutes default
+      title: appointment?.title || '',
+      patient_id: appointment?.patient_id || '',
+      professional_id: appointment?.professional_id || '',
+      date: appointment ? new Date(appointment.start_time) : selectedDate || new Date(),
+      start_time: appointment ? format(new Date(appointment.start_time), 'HH:mm') : '',
+      duration: appointment ? 
+        ((new Date(appointment.end_time).getTime() - new Date(appointment.start_time).getTime()) / (1000 * 60)).toString() 
+        : '60',
     },
   });
 
@@ -97,7 +100,11 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
         end_time: endDateTime.toISOString(),
       };
 
-      await createAppointment(appointmentData);
+      if (appointment) {
+        await updateAppointment(appointment.id, appointmentData);
+      } else {
+        await createAppointment(appointmentData);
+      }
       form.reset();
       onOpenChange(false);
     } catch (error) {
@@ -135,10 +142,10 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 text-primary" />
-            Novo Agendamento
+            {appointment ? 'Editar Agendamento' : 'Novo Agendamento'}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Preencha os dados do agendamento
+            {appointment ? 'Edite os dados do agendamento' : 'Preencha os dados do agendamento'}
           </DialogDescription>
         </DialogHeader>
 
@@ -368,7 +375,7 @@ export function AppointmentModal({ open, onOpenChange, selectedDate }: Appointme
                 variant="medical"
                 disabled={creating}
               >
-                {creating ? 'Criando...' : 'Criar Agendamento'}
+                {creating ? (appointment ? 'Salvando...' : 'Criando...') : (appointment ? 'Salvar Alterações' : 'Criar Agendamento')}
               </Button>
             </DialogFooter>
           </form>

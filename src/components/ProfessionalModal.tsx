@@ -104,19 +104,6 @@ export function ProfessionalModal({
     { value: '#F97316', label: 'Laranja Escuro' },
   ];
 
-  const specialties = [
-    'Odontologia',
-    'Fisioterapia',
-    'Estética',
-    'Psicologia',
-    'Nutrição',
-    'Cardiologia',
-    'Dermatologia',
-    'Ortopedia',
-    'Pediatria',
-    'Ginecologia',
-    'Outro',
-  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,20 +144,13 @@ export function ProfessionalModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Especialidade</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Selecionar especialidade" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {specialties.map((specialty) => (
-                        <SelectItem key={specialty} value={specialty}>
-                          {specialty}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Input 
+                      placeholder="Ex: Odontologia, Fisioterapia, Psicologia..."
+                      {...field}
+                      className="bg-background"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

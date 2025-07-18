@@ -27,8 +27,8 @@ export function Layout({ children }: LayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         {/* Global trigger in header - always visible */}
-        <header className="h-14 flex items-center border-b border-border/50 bg-gradient-card shadow-sm fixed top-0 left-0 right-0 z-50">
-          <SidebarTrigger className="ml-4">
+        <header className="h-14 flex items-center border-b border-border/50 bg-gradient-card shadow-sm fixed top-0 left-0 right-0 z-40">
+          <SidebarTrigger className="ml-4 z-50">
             <Menu className="h-4 w-4" />
           </SidebarTrigger>
           <div className="flex-1 flex items-center justify-center">

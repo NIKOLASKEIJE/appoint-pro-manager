@@ -148,6 +148,28 @@ export function useProfessionals() {
   useEffect(() => {
     if (user && currentClinic) {
       fetchProfessionals();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('professionals-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'professionals',
+            filter: `clinic_id=eq.${currentClinic.id}`
+          },
+          (payload) => {
+            console.log('Real-time professional change:', payload);
+            fetchProfessionals();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setLoading(false);
       setProfessionals([]);

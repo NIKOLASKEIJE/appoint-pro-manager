@@ -9,12 +9,13 @@ import { WeeklyCalendar } from "@/components/WeeklyCalendar"
 import { DailyCalendar } from "@/components/DailyCalendar"
 import { MonthlyCalendar } from "@/components/MonthlyCalendar"
 import { AppointmentModal } from "@/components/AppointmentModal"
-import { useAppointments } from "@/hooks/useAppointments"
+import { useAppointments, Appointment } from "@/hooks/useAppointments"
 import { useProfessionals } from "@/hooks/useProfessionals"
 
 const Agenda = () => {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>()
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedProfessionalId, setSelectedProfessionalId] = useState<string>("all")
   const [viewMode, setViewMode] = useState<string>("week")
@@ -22,9 +23,10 @@ const Agenda = () => {
   const { appointments, loading } = useAppointments()
   const { professionals } = useProfessionals()
 
-  const handleAppointmentClick = (appointment: any) => {
-    // Implementar ação ao clicar no agendamento (ex: editar, visualizar detalhes)
-    console.log('Appointment clicked:', appointment);
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setSelectedDate(new Date(appointment.start_time));
+    setShowAppointmentModal(true);
   }
 
   const handleDateClick = (date: Date) => {
@@ -33,6 +35,7 @@ const Agenda = () => {
   }
 
   const handleNewAppointment = () => {
+    setEditingAppointment(undefined)
     setSelectedDate(undefined)
     setShowAppointmentModal(true)
   }
@@ -168,8 +171,12 @@ const Agenda = () => {
 
       <AppointmentModal
         open={showAppointmentModal}
-        onOpenChange={setShowAppointmentModal}
+        onOpenChange={(open) => {
+          setShowAppointmentModal(open);
+          if (!open) setEditingAppointment(undefined);
+        }}
         selectedDate={selectedDate}
+        appointment={editingAppointment}
       />
     </div>
   )

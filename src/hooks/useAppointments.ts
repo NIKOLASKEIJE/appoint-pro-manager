@@ -184,6 +184,28 @@ export function useAppointments() {
   useEffect(() => {
     if (user && currentClinic) {
       fetchAppointments();
+      
+      // Setup real-time subscription
+      const channel = supabase
+        .channel('appointments-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'appointments',
+            filter: `clinic_id=eq.${currentClinic.id}`
+          },
+          (payload) => {
+            console.log('Real-time appointment change:', payload);
+            fetchAppointments(); // Refetch to get latest data with joins
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setLoading(false);
       setAppointments([]);
